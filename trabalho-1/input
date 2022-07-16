@@ -1,0 +1,4 @@
+graph g_Teste {
+    a -- b -- c;
+    b -- d -- e;
+}
