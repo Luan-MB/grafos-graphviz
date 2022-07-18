@@ -16,15 +16,9 @@ int main(void) {
 	printf("Grau médio = %d\n", grau_medio(g));
 	regular(g) ? printf("Grafo regular\n") : printf("Grafo não regular\n");
 	completo(g) ? printf("Grafo completo\n") : printf("Grafo não completo\n");
+	conexo(g) ? printf("Grafo conexo\n") : printf("Grafo não conexo\n");
 	printf("Grafo com %d triângulos\n", n_triangulos(g));
 	complemento(g);
-
-	int **adj_matriz = matriz_adjacencia(g);
-	for (int i = 0; i < n_vertices(g); ++i) {
-		for (int j = 0; j < n_vertices(g); ++j)
-			printf("%d ", adj_matriz[i][j]);
-		printf("\n");
-	}
 	
 	destroi_grafo(g);
 

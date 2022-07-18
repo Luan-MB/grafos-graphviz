@@ -85,17 +85,61 @@ int completo(grafo g) {
 	return 0;
 }
 
+static int vertice_visitado (Agnode_t **visitados, int *size, Agnode_t *v) {
+
+	for (int i=0; i<(*size); ++i)
+		if (visitados[i] == v)
+			return TRUE;
+	return FALSE;
+}
+
+static void check_edges(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
+
+	if (!vertice_visitado(visitados, size, n)) {
+		visitados[*size] = n;
+		(*size)++;
+	}
+
+	for (Agedge_t *e = agfstout(g,n); e; e = agnxtout(g,e)) {
+			if (!vertice_visitado(visitados, size, e->node))
+				check_edges(e->node, g, visitados, size);
+		}
+
+	for (Agedge_t *e = agfstin(g,n); e; e = agnxtin(g,e)) {
+			if (!vertice_visitado(visitados, size, e->node))
+				check_edges(e->node, g, visitados, size);
+		}
+
+}
+
 // -----------------------------------------------------------------------------
 int conexo(grafo g) {
-	return n_vertices(g);
+
+
+	Agnode_t *vertice_inicial = agfstnode(g);
+	Agnode_t **visitados = (Agnode_t **) malloc ((size_t) n_vertices(g) * sizeof(Agnode_t *));
+	int i_vis = 0;
+
+	check_edges(vertice_inicial, g, visitados, &i_vis);
+
+	if (i_vis == n_vertices(g))
+		return TRUE;
+	return FALSE;
 }
 
 // -----------------------------------------------------------------------------
 int bipartido(grafo g) {
-  	
+	
+	Agnode_t *vertice_inicial = agfstnode(g);
+	Agnode_t **visitados = (Agnode_t **) malloc ((size_t) n_vertices(g) * sizeof(Agnode_t *));
+	int i_vis = 0;
+
+	check_edges(vertice_inicial, g, visitados, &i_vis);
+
 	return n_vertices(g);
 }
 
+// -----------------------------------------------------------------------------
 static int **multiplica_matriz(int **matriz_a, int** matriz_b, int tam) {
 
 	int **matriz_mult = (int **) malloc ((size_t) tam * sizeof(int *));
@@ -105,7 +149,6 @@ static int **multiplica_matriz(int **matriz_a, int** matriz_b, int tam) {
 
 	for (int i = 0; i < tam; ++i) {
 		for (int j = 0; j < tam; ++j) {
-			
 			for (int k = 0; k < tam; ++k)
 				matriz_mult[i][j] += matriz_a[i][k] * matriz_b[k][j];
 
@@ -123,7 +166,6 @@ static int soma_diagonal(int **matriz, int tam) {
 	return soma;
 }
 
-// -----------------------------------------------------------------------------
 int n_triangulos(grafo g) {
 	
 	int **adj_matriz = matriz_adjacencia(g);
