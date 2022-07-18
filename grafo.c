@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "grafo.h"
 
 //------------------------------------------------------------------------------
@@ -10,12 +11,11 @@ grafo le_grafo(void) {
 void destroi_grafo(grafo g) {
   
 	agfree(g, NULL);
-	return 1;
 }
 //------------------------------------------------------------------------------
 grafo escreve_grafo(grafo g) {
-  
-  	return agwrite(g, stdout);
+  	agwrite(g, stdout);
+  	return g;
 }
 
 // -----------------------------------------------------------------------------
@@ -80,38 +80,103 @@ int regular(grafo g) {
 // -----------------------------------------------------------------------------
 int completo(grafo g) {
   
-	if (grau_medio(g) == (n_vertices(g) - 1))
+	if (grau_medio(g) == (agnnodes(g) - 1))
 		return 1;
 	return 0;
 }
 
 // -----------------------------------------------------------------------------
 int conexo(grafo g) {
-  
-  return 0;
+	return n_vertices(g);
 }
 
 // -----------------------------------------------------------------------------
 int bipartido(grafo g) {
-  
-  return 0;
+  	
+	return n_vertices(g);
+}
+
+static int **multiplica_matriz(int **matriz_a, int** matriz_b, int tam) {
+
+	int **matriz_mult = (int **) malloc ((size_t) tam * sizeof(int *));
+	for (int i = 0; i < tam; ++i) {
+		matriz_mult[i] = (int *) calloc ((size_t) tam, sizeof(int));
+	}
+
+	for (int i = 0; i < tam; ++i) {
+		for (int j = 0; j < tam; ++j) {
+			
+			for (int k = 0; k < tam; ++k)
+				matriz_mult[i][j] += matriz_a[i][k] * matriz_b[k][j];
+
+		}
+	}
+
+	return matriz_mult;
+}
+
+static int soma_diagonal(int **matriz, int tam) {
+	int soma = 0;
+	for (int i = 0; i < tam; i++) {
+		soma += matriz[i][i];
+	}
+	return soma;
 }
 
 // -----------------------------------------------------------------------------
 int n_triangulos(grafo g) {
-  
-  return 0;
+	
+	int **adj_matriz = matriz_adjacencia(g);
+	int **adj_matriz_sqr = multiplica_matriz(adj_matriz, adj_matriz, n_vertices(g));
+	int **adj_matriz_cub = multiplica_matriz(adj_matriz, adj_matriz_sqr, n_vertices(g));
+	
+	return (soma_diagonal(adj_matriz_cub, n_vertices(g)) / 6);
 }
 
 // -----------------------------------------------------------------------------
 int **matriz_adjacencia(grafo g) {
+		
+	int **matriz = (int **) malloc ((size_t) n_vertices(g) * sizeof(int *));
+	for (int i = 0; i < n_vertices(g); ++i) {
+		matriz[i] = (int *) calloc ((size_t) n_vertices(g), sizeof(int));
+	}
   
-  return NULL;
+	int lin = 0, col = 0;
+	for (Agnode_t *vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
+		for (Agnode_t *vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
+			if (agedge(g, vert1, vert2, NULL, FALSE) != NULL)
+				matriz[lin][col] = 1;
+			col++;
+		}
+		lin++;
+		col = 0;
+	}
+
+  	return matriz;
 }
 
 // -----------------------------------------------------------------------------
 grafo complemento(grafo g) {
-  
-  return NULL;
+	
+	Agraph_t *complement;
+	complement = agopen("Complementar", Agstrictundirected, NULL);
+
+	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
+		agnode(complement, agnameof(n), TRUE);
+	}
+
+	for (Agnode_t *vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
+		for (Agnode_t *vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
+			if (vert2 != vert1) {
+				if (agedge(g, vert1, vert2, NULL, FALSE) == NULL) {
+					agedge(complement, agnode(complement, agnameof(vert1), FALSE), agnode(complement, agnameof(vert2), FALSE), NULL, TRUE);
+				}
+			}
+		}
+	}
+
+	agwrite(complement, stdout);
+	
+  	return complement;
 }
 
