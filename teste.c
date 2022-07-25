@@ -17,6 +17,7 @@ int main(void) {
 	regular(g) ? printf("Grafo regular\n") : printf("Grafo não regular\n");
 	completo(g) ? printf("Grafo completo\n") : printf("Grafo não completo\n");
 	conexo(g) ? printf("Grafo conexo\n") : printf("Grafo não conexo\n");
+	bipartido(g) ? printf("Grafo bipartido\n") : printf("Grafo não bipartido\n");
 	printf("Grafo com %d triângulos\n", n_triangulos(g));
 	complemento(g);
 	

@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "grafo.h"
 
+#define N_COLORS 2
+
 //------------------------------------------------------------------------------
 grafo le_grafo(void) {
 
@@ -127,16 +129,45 @@ int conexo(grafo g) {
 	return FALSE;
 }
 
+static int cor_valida(int **adj_matriz, int *colors, int size) {
+
+	for (int i=0; i<size; ++i)
+		for (int j=i+1; j<size; ++j)
+			if (adj_matriz[i][j] && (colors[j] == colors[i]))
+				return FALSE;
+	return TRUE;
+}
+
+static int colore_grafo(int **adj_matriz, int *colors, int i, int size) {
+
+	if (i == size) {
+		if (cor_valida(adj_matriz, colors, size))
+			return TRUE;
+		return FALSE;
+	}
+
+	for (int j=1; j<=N_COLORS; ++j) {
+		colors[i] = j;
+
+		if (colore_grafo(adj_matriz, colors, i+1, size))
+			return TRUE;
+
+		colors[i] = 0;
+	}
+
+	return FALSE;
+}
+
+
 // -----------------------------------------------------------------------------
 int bipartido(grafo g) {
 	
-	Agnode_t *vertice_inicial = agfstnode(g);
-	Agnode_t **visitados = (Agnode_t **) malloc ((size_t) n_vertices(g) * sizeof(Agnode_t *));
-	int i_vis = 0;
+	int **adj_matriz = matriz_adjacencia(g);
+	int *colors = calloc ((size_t) n_arestas(g), sizeof(int));
 
-	check_edges(vertice_inicial, g, visitados, &i_vis);
-
-	return n_vertices(g);
+	if (colore_grafo(adj_matriz, colors, 0, n_arestas(g)))
+		return TRUE;
+	return FALSE;
 }
 
 // -----------------------------------------------------------------------------
