@@ -9,13 +9,16 @@ grafo le_grafo(void) {
 
   	return agread(stdin, NULL); 
 }
+
 //------------------------------------------------------------------------------
 void destroi_grafo(grafo g) {
   
 	agfree(g, NULL);
 }
+
 //------------------------------------------------------------------------------
 grafo escreve_grafo(grafo g) {
+
   	agwrite(g, stdout);
   	return g;
 }
@@ -95,7 +98,7 @@ static int vertice_visitado (Agnode_t **visitados, int *size, Agnode_t *v) {
 	return FALSE;
 }
 
-static void check_edges(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
+static void checa_arestas(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
 
 	if (!vertice_visitado(visitados, size, n)) {
 		visitados[*size] = n;
@@ -104,12 +107,12 @@ static void check_edges(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
 
 	for (Agedge_t *e = agfstout(g,n); e; e = agnxtout(g,e)) {
 			if (!vertice_visitado(visitados, size, e->node))
-				check_edges(e->node, g, visitados, size);
+				checa_arestas(e->node, g, visitados, size);
 		}
 
 	for (Agedge_t *e = agfstin(g,n); e; e = agnxtin(g,e)) {
 			if (!vertice_visitado(visitados, size, e->node))
-				check_edges(e->node, g, visitados, size);
+				checa_arestas(e->node, g, visitados, size);
 		}
 
 }
@@ -122,7 +125,7 @@ int conexo(grafo g) {
 	Agnode_t **visitados = (Agnode_t **) malloc ((size_t) n_vertices(g) * sizeof(Agnode_t *));
 	int i_vis = 0;
 
-	check_edges(vertice_inicial, g, visitados, &i_vis);
+	checa_arestas(vertice_inicial, g, visitados, &i_vis);
 
 	if (i_vis == n_vertices(g))
 		return TRUE;
@@ -157,7 +160,6 @@ static int colore_grafo(int **adj_matriz, int *colors, int i, int size) {
 
 	return FALSE;
 }
-
 
 // -----------------------------------------------------------------------------
 int bipartido(grafo g) {
@@ -210,9 +212,8 @@ int n_triangulos(grafo g) {
 int **matriz_adjacencia(grafo g) {
 		
 	int **matriz = (int **) malloc ((size_t) n_vertices(g) * sizeof(int *));
-	for (int i = 0; i < n_vertices(g); ++i) {
+	for (int i = 0; i < n_vertices(g); ++i)
 		matriz[i] = (int *) calloc ((size_t) n_vertices(g), sizeof(int));
-	}
   
 	int lin = 0, col = 0;
 	for (Agnode_t *vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
