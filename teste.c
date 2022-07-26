@@ -7,7 +7,7 @@ int main(void) {
 
 	grafo g = le_grafo();
 
-	escreve_grafo(g);
+	//escreve_grafo(g);
 	
 	printf("Número de vértices = %d\n", n_vertices(g));
 	printf("Número de arestas = %d\n", n_arestas(g));
@@ -19,7 +19,7 @@ int main(void) {
 	conexo(g) ? printf("Grafo conexo\n") : printf("Grafo não conexo\n");
 	bipartido(g) ? printf("Grafo bipartido\n") : printf("Grafo não bipartido\n");
 	printf("Grafo com %d triângulos\n", n_triangulos(g));
-	complemento(g);
+	//complemento(g);
 	
 	destroi_grafo(g);
 

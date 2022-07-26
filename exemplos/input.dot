@@ -1,6 +1,4 @@
 graph g_Teste {
-    a -- b;
-    c -- a -- d;
-    b -- d -- e;
-    b -- e;
+    a -- b -- c;
+    c -- a;
 }

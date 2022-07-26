@@ -146,7 +146,7 @@ static int colore_grafo(int **adj_matriz, int *colors, int i, int size) {
 	for (int j=1; j<=N_COLORS; ++j) {
 		colors[i] = j;
 
-		if (cor_valida(adj_matriz, colors, i))
+		if (cor_valida(adj_matriz, colors, i+1))
 			if (colore_grafo(adj_matriz, colors, i+1, size))
 				return TRUE;
 	}
@@ -200,6 +200,15 @@ int n_triangulos(grafo g) {
 	int **adj_matriz_cub = multiplica_matriz(adj_matriz, adj_matriz_sqr, n_vertices(g));
 	
 	return (soma_diagonal(adj_matriz_cub, n_vertices(g)) / 6);
+}
+
+static void print_matriz(int **adj_matriz, int size) {
+
+	for (int i=0; i<size; ++i) {
+		for (int j=0; j<size; ++j)
+			printf("%d ", adj_matriz[i][j]);
+		printf("\n");
+	}
 }
 
 // -----------------------------------------------------------------------------
