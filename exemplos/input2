@@ -1,5 +1,0 @@
-graph g_Teste {
-    a -- b;
-    c -- b;
-    a -- d -- c;
-}
