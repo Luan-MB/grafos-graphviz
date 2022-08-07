@@ -1,3 +1,5 @@
+// Luan Machado Bernardt | GRR20190363
+// Lucas Soni Teixeira | GRR20190395
 #include <stdio.h>
 #include <stdlib.h>
 #include "grafo.h"
