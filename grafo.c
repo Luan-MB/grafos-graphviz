@@ -46,6 +46,7 @@ int grau_maximo(grafo g)  {
 	int grau_max = 0;
 	int grau_n;
 
+	// Itera sobre todos os vertices
 	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n))
 		if ((grau_n = grau(n, g)) > grau_max)
 		grau_max = grau_n;
@@ -58,6 +59,7 @@ int grau_minimo(grafo g)  {
 	int grau_min = n_vertices(g) - 1;
 	int grau_n;
 
+	// Itera sobre todos os vertices
 	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n))
 		if ((grau_n = grau(n, g)) < grau_min)
 		grau_min = grau_n;
@@ -75,6 +77,7 @@ int regular(grafo g) {
   
 	int grau_avg = grau_medio(g);
 
+	// Itera sobre todos os vertices
 	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n))
 		if (grau_avg != grau(n, g))
 		return 0;
@@ -97,21 +100,23 @@ static int vertice_visitado (Agnode_t **visitados, int *size, Agnode_t *v) {
 	return FALSE;
 }
 
-static void check_edges(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
+static void verifica_arestas(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
 
 	if (!vertice_visitado(visitados, size, n)) {
 		visitados[*size] = n;
 		(*size)++;
 	}
 
+	// Itera sobre todas as arestas que incidem em n
+	// Caso o outro vertice no qual a aresta incide, nao tenha sido visitado verifica-se fronteira do mesmo
 	for (Agedge_t *e = agfstout(g,n); e; e = agnxtout(g,e)) {
 			if (!vertice_visitado(visitados, size, e->node))
-				check_edges(e->node, g, visitados, size);
+				verifica_arestas(e->node, g, visitados, size);
 		}
 
 	for (Agedge_t *e = agfstin(g,n); e; e = agnxtin(g,e)) {
 			if (!vertice_visitado(visitados, size, e->node))
-				check_edges(e->node, g, visitados, size);
+				verifica_arestas(e->node, g, visitados, size);
 		}
 
 }
@@ -123,7 +128,8 @@ int conexo(grafo g) {
 	Agnode_t **visitados = (Agnode_t **) malloc ((size_t) n_vertices(g) * sizeof(Agnode_t *));
 	int i_vis = 0;
 
-	check_edges(vertice_inicial, g, visitados, &i_vis);
+	// Verifica a fronteira do vertice inicial
+	verifica_arestas(vertice_inicial, g, visitados, &i_vis);
 
 	if (i_vis == n_vertices(g))
 		return TRUE;
@@ -193,6 +199,8 @@ static int **multiplica_matriz(int **matriz_a, int** matriz_b, int tam) {
 
 static int soma_diagonal(int **matriz, int tam) {
 	int soma = 0;
+
+	// Soma a diagonal da matriz
 	for (int i = 0; i < tam; i++) {
 		soma += matriz[i][i];
 	}
@@ -205,6 +213,7 @@ int n_triangulos(grafo g) {
 	int **adj_matriz_sqr = multiplica_matriz(adj_matriz, adj_matriz, n_vertices(g));
 	int **adj_matriz_cub = multiplica_matriz(adj_matriz, adj_matriz_sqr, n_vertices(g));
 	
+	// Calcula o numero de triangulos em g
 	return (soma_diagonal(adj_matriz_cub, n_vertices(g)) / 6);
 }
 
@@ -226,8 +235,12 @@ int **matriz_adjacencia(grafo g) {
 	}
   
 	int lin = 0, col = 0;
+
+	// Itera sobre os vertices de g
 	for (Agnode_t *vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
 		for (Agnode_t *vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
+
+			// Caso exista aresta vert1 -- vert2, posicao correspondente na matriz recebe 1
 			if (agedge(g, vert1, vert2, NULL, FALSE) != NULL)
 				matriz[lin][col] = 1;
 			col++;
@@ -243,14 +256,20 @@ int **matriz_adjacencia(grafo g) {
 grafo complemento(grafo g) {
 	
 	Agraph_t *complement;
+
+	// Cria o grafo complementar
 	complement = agopen("Complementar", Agstrictundirected, NULL);
 
+	// Copia cada verticede g no complemento
 	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
 		agnode(complement, agnameof(n), TRUE);
 	}
 
+	// Itera sobre os vertices de g
 	for (Agnode_t *vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
 		for (Agnode_t *vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
+			
+			// Caso a aresta vert1 -- vert2 nao exista em g, cria-se no complemento
 			if (vert2 != vert1) {
 				if (agedge(g, vert1, vert2, NULL, FALSE) == NULL) {
 					agedge(complement, agnode(complement, agnameof(vert1), FALSE), agnode(complement, agnameof(vert2), FALSE), NULL, TRUE);
