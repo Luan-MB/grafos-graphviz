@@ -117,7 +117,6 @@ static void check_edges(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
 // -----------------------------------------------------------------------------
 int conexo(grafo g) {
 
-
 	Agnode_t *vertice_inicial = agfstnode(g);
 	Agnode_t **visitados = (Agnode_t **) malloc ((size_t) n_vertices(g) * sizeof(Agnode_t *));
 	int i_vis = 0;
@@ -131,6 +130,7 @@ int conexo(grafo g) {
 
 static int cor_valida(int **adj_matriz, int *colors, int size) {
 
+	// Verifica se nao existem vizinhos com a mesma cor
 	for (int i=0; i<size; ++i)
 		for (int j=i+1; j<size; ++j)
 			if (adj_matriz[i][j] && (colors[j] == colors[i]))
@@ -140,13 +140,16 @@ static int cor_valida(int **adj_matriz, int *colors, int size) {
 
 static int colore_grafo(int **adj_matriz, int *colors, int i, int size) {
 
+	// Se coloriu todos os vertices
 	if (i == size)
 		return TRUE;
 
 	for (int j=1; j<=N_COLORS; ++j) {
+		// Colore o vertice i com a cor j
 		colors[i] = j;
 
 		if (cor_valida(adj_matriz, colors, i+1))
+			// Chama a funcao para o proximo vertice
 			if (colore_grafo(adj_matriz, colors, i+1, size))
 				return TRUE;
 	}
@@ -154,13 +157,13 @@ static int colore_grafo(int **adj_matriz, int *colors, int i, int size) {
 	return FALSE;
 }
 
-
 // -----------------------------------------------------------------------------
 int bipartido(grafo g) {
 	
 	int **adj_matriz = matriz_adjacencia(g);
 	int *colors = calloc ((size_t) n_vertices(g), sizeof(int));
 
+	// Tenta colorir o grafo com 2 cores
 	if (colore_grafo(adj_matriz, colors, 0, n_vertices(g)))
 		return TRUE;
 	return FALSE;
@@ -174,6 +177,7 @@ static int **multiplica_matriz(int **matriz_a, int** matriz_b, int tam) {
 		matriz_mult[i] = (int *) calloc ((size_t) tam, sizeof(int));
 	}
 
+	// Multiplica a matriz a pela matriz b
 	for (int i = 0; i < tam; ++i) {
 		for (int j = 0; j < tam; ++j) {
 			for (int k = 0; k < tam; ++k)
