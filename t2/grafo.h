@@ -100,7 +100,7 @@ grafo complemento(grafo g);
 //
 // devolve g
 
-void decompoe(grafo g);
+int decompoe(grafo g);
 
 
 #endif

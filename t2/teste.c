@@ -8,7 +8,7 @@ int main(void) {
   grafo g = le_grafo();
 
   escreve_grafo(g);
-  decompoe(g);
+  printf("%d\n", decompoe(g));
   destroi_grafo(g);
 
   return 0;

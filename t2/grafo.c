@@ -263,32 +263,39 @@ grafo complemento(grafo g) {
 
 void dfs(grafo g, vertice *visitados, vertice vert, int *tamanho, vertice *pos_ordem, int *p_tamanho) {
 
-	if (vertice_visitado(visitados, tamanho, vert))
+	if (vertice_visitado(visitados, tamanho, vert)) {
+		printf("vertice %s ja foi visitado\n", agnameof(vert));
 		return;
+	}
+
+	printf("visitou vertice %s\n", agnameof(vert));
 
     visitados[(*tamanho)++] = vert;
 
     for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
-        if (agedge(g, vert, v, NULL, FALSE))
+        if (agedge(g, vert, v, NULL, FALSE)) {
+			printf("encontrou arco de %s -> %s\n", agnameof(vert), agnameof(v));
           	dfs(g, visitados, v, tamanho, pos_ordem, p_tamanho);
+		}
     }
 
     pos_ordem[(*p_tamanho)++] = vert;
 
 }
 
-static grafo inverte_grafo(grafo g) {
+static grafo inverte_grafo(grafo g, vertice *pos_ordem, int n_vert) {
 
 	grafo g_reverso = agopen("g_reverso", Agdirected, NULL);
 
-	for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
-		agnode(g_reverso, agnameof(v), TRUE);
+	for (int i=(n_vert-1); i>=0; --i) {
+		agnode(g_reverso, agnameof(pos_ordem[i]), TRUE);
 	}
 
 	for (vertice v1 = agfstnode(g); v1; v1 = agnxtnode(g, v1)) {
 		for (vertice v2 = agfstnode(g); v2; v2 = agnxtnode(g, v2)) {
-			if ((v1 != v2) && (agedge(g, v1, v2, NULL, FALSE)))
+			if (agedge(g, v1, v2, NULL, FALSE)) {
 				agedge(g_reverso, agnode(g_reverso, agnameof(v2), FALSE), agnode(g_reverso, agnameof(v1), FALSE), NULL, TRUE);
+			}
 		}
 	}
 
@@ -296,24 +303,48 @@ static grafo inverte_grafo(grafo g) {
 }
 
 //------------------------------------------------------------------------------
-void decompoe(grafo g) {
+int decompoe(grafo g) {
 
-    vertice visitados[agnnodes(g)];
+	if (!agisdirected(g))
+		return 0;
+		
+	int num_verts = n_vertices(g);
+
+    vertice visitados_um[num_verts];
 	int visitados_tam = 0;
 
-	vertice pos_ordem[agnnodes(g)];
+	vertice pos_ordem_um[num_verts];
 	int pos_ordem_t = 0;
 
 	for (vertice vert = agfstnode(g); vert; vert = agnxtnode(g, vert)) {
-		dfs(g, visitados, vert, &visitados_tam, pos_ordem, &pos_ordem_t);
+		dfs(g, visitados_um, vert, &visitados_tam, pos_ordem_um, &pos_ordem_t);
 	}
 
 	for (int i=0; i<pos_ordem_t; ++i) {
-		printf("%s\n", agnameof(pos_ordem[i]));
+		printf("%s\n", agnameof(pos_ordem_um[i]));
 	}
 
-	grafo invertido = inverte_grafo(g);
-
+	grafo invertido = inverte_grafo(g, pos_ordem_um, num_verts);
 	escreve_grafo(invertido);
+	
+	vertice visitados_dois[num_verts];
+	visitados_tam = 0;
+
+	vertice pos_ordem_dois[num_verts];
+	pos_ordem_t = 0;
+
+	int componentes_fortes = 0;
+
+	for (vertice vert = agfstnode(invertido); vert; vert = agnxtnode(invertido, vert)) {
+		if (!vertice_visitado(visitados_dois, &visitados_tam, vert))
+			componentes_fortes++;
+		dfs(invertido, visitados_dois, vert, &visitados_tam, pos_ordem_dois, &pos_ordem_t);
+	}
+
+	for (int i=0; i<pos_ordem_t; ++i) {
+		printf("%s\n", agnameof(pos_ordem_dois[i]));
+	}
+
+	return componentes_fortes;
 }
 
