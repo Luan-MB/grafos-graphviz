@@ -263,16 +263,36 @@ grafo complemento(grafo g) {
 
 void dfs(grafo g, vertice *visitados, vertice vert, int *tamanho, vertice *pos_ordem, int *p_tamanho) {
 
+	if (vertice_visitado(visitados, tamanho, vert))
+		return;
+
     visitados[(*tamanho)++] = vert;
 
     for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
         if (agedge(g, vert, v, NULL, FALSE))
-			if (!vertice_visitado(visitados, tamanho, v))
-          		dfs(g, visitados, v, tamanho, pos_ordem, p_tamanho);
+          	dfs(g, visitados, v, tamanho, pos_ordem, p_tamanho);
     }
 
     pos_ordem[(*p_tamanho)++] = vert;
 
+}
+
+static grafo inverte_grafo(grafo g) {
+
+	grafo g_reverso = agopen("g_reverso", Agdirected, NULL);
+
+	for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
+		agnode(g_reverso, agnameof(v), TRUE);
+	}
+
+	for (vertice v1 = agfstnode(g); v1; v1 = agnxtnode(g, v1)) {
+		for (vertice v2 = agfstnode(g); v2; v2 = agnxtnode(g, v2)) {
+			if ((v1 != v2) && (agedge(g, v1, v2, NULL, FALSE)))
+				agedge(g_reverso, agnode(g_reverso, agnameof(v2), FALSE), agnode(g_reverso, agnameof(v1), FALSE), NULL, TRUE);
+		}
+	}
+
+	return g_reverso;
 }
 
 //------------------------------------------------------------------------------
@@ -292,5 +312,8 @@ void decompoe(grafo g) {
 		printf("%s\n", agnameof(pos_ordem[i]));
 	}
 
+	grafo invertido = inverte_grafo(g);
+
+	escreve_grafo(invertido);
 }
 
