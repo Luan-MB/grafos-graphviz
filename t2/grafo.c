@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include "grafo.h"
+
+#include <stdio.h>
 #include <stdlib.h>
 #include "grafo.h"
 
@@ -44,7 +47,7 @@ int grau_maximo(grafo g)  {
 	int grau_max = 0;
 	int grau_n;
 
-	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n))
+	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n))
 		if ((grau_n = grau(n, g)) > grau_max)
 		grau_max = grau_n;
 	return grau_max;
@@ -56,7 +59,7 @@ int grau_minimo(grafo g)  {
 	int grau_min = n_vertices(g) - 1;
 	int grau_n;
 
-	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n))
+	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n))
 		if ((grau_n = grau(n, g)) < grau_min)
 		grau_min = grau_n;
 	return grau_min;
@@ -73,7 +76,7 @@ int regular(grafo g) {
   
 	int grau_avg = grau_medio(g);
 
-	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n))
+	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n))
 		if (grau_avg != grau(n, g))
 		return 0;
 	return 1;
@@ -87,7 +90,7 @@ int completo(grafo g) {
 	return 0;
 }
 
-static int vertice_visitado (Agnode_t **visitados, int *size, Agnode_t *v) {
+static int vertice_visitado (vertice *visitados, int *size, vertice v) {
 
 	for (int i=0; i<(*size); ++i)
 		if (visitados[i] == v)
@@ -95,7 +98,7 @@ static int vertice_visitado (Agnode_t **visitados, int *size, Agnode_t *v) {
 	return FALSE;
 }
 
-static void check_edges(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
+static void check_edges(vertice n, grafo g, vertice *visitados, int *size) {
 
 	if (!vertice_visitado(visitados, size, n)) {
 		visitados[*size] = n;
@@ -118,8 +121,8 @@ static void check_edges(Agnode_t *n, grafo g, Agnode_t **visitados, int *size) {
 int conexo(grafo g) {
 
 
-	Agnode_t *vertice_inicial = agfstnode(g);
-	Agnode_t **visitados = (Agnode_t **) malloc ((size_t) n_vertices(g) * sizeof(Agnode_t *));
+	vertice vertice_inicial = agfstnode(g);
+	vertice *visitados = (vertice *) malloc ((size_t) n_vertices(g) * sizeof(vertice));
 	int i_vis = 0;
 
 	check_edges(vertice_inicial, g, visitados, &i_vis);
@@ -220,8 +223,8 @@ int **matriz_adjacencia(grafo g) {
 	}
   
 	int lin = 0, col = 0;
-	for (Agnode_t *vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
-		for (Agnode_t *vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
+	for (vertice vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
+		for (vertice vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
 			if (agedge(g, vert1, vert2, NULL, FALSE) != NULL)
 				matriz[lin][col] = 1;
 			col++;
@@ -239,12 +242,12 @@ grafo complemento(grafo g) {
 	Agraph_t *complement;
 	complement = agopen("Complementar", Agstrictundirected, NULL);
 
-	for (Agnode_t *n = agfstnode(g); n; n = agnxtnode(g, n)) {
+	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n)) {
 		agnode(complement, agnameof(n), TRUE);
 	}
 
-	for (Agnode_t *vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
-		for (Agnode_t *vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
+	for (vertice vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
+		for (vertice vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
 			if (vert2 != vert1) {
 				if (agedge(g, vert1, vert2, NULL, FALSE) == NULL) {
 					agedge(complement, agnode(complement, agnameof(vert1), FALSE), agnode(complement, agnameof(vert2), FALSE), NULL, TRUE);
@@ -256,5 +259,38 @@ grafo complemento(grafo g) {
 	agwrite(complement, stdout);
 	
   	return complement;
+}
+
+void dfs(grafo g, vertice *visitados, vertice vert, int *tamanho, vertice *pos_ordem, int *p_tamanho) {
+
+    visitados[(*tamanho)++] = vert;
+
+    for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
+        if (agedge(g, vert, v, NULL, FALSE))
+			if (!vertice_visitado(visitados, tamanho, v))
+          		dfs(g, visitados, v, tamanho, pos_ordem, p_tamanho);
+    }
+
+    pos_ordem[(*p_tamanho)++] = vert;
+
+}
+
+//------------------------------------------------------------------------------
+void decompoe(grafo g) {
+
+    vertice visitados[agnnodes(g)];
+	int visitados_tam = 0;
+
+	vertice pos_ordem[agnnodes(g)];
+	int pos_ordem_t = 0;
+
+	for (vertice vert = agfstnode(g); vert; vert = agnxtnode(g, vert)) {
+		dfs(g, visitados, vert, &visitados_tam, pos_ordem, &pos_ordem_t);
+	}
+
+	for (int i=0; i<pos_ordem_t; ++i) {
+		printf("%s\n", agnameof(pos_ordem[i]));
+	}
+
 }
 
