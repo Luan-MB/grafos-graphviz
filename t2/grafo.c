@@ -7,6 +7,11 @@
 
 #define N_COLORS 2
 
+typedef struct {
+	vertice vertice;
+	int componente;
+} t_vertice;
+
 //------------------------------------------------------------------------------
 grafo le_grafo(void) {
 
@@ -261,25 +266,33 @@ grafo complemento(grafo g) {
   	return complement;
 }
 
-void dfs(grafo g, vertice *visitados, vertice vert, int *tamanho, vertice *pos_ordem, int *p_tamanho) {
+void acha_pos_ordem(grafo g, vertice *visitados, vertice vert, int *tamanho, vertice *pos_ordem, int *p_tamanho) {
 
 	if (vertice_visitado(visitados, tamanho, vert)) {
-		printf("vertice %s ja foi visitado\n", agnameof(vert));
 		return;
 	}
-
-	printf("visitou vertice %s\n", agnameof(vert));
 
     visitados[(*tamanho)++] = vert;
 
     for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
         if (agedge(g, vert, v, NULL, FALSE)) {
-			printf("encontrou arco de %s -> %s\n", agnameof(vert), agnameof(v));
-          	dfs(g, visitados, v, tamanho, pos_ordem, p_tamanho);
+          	acha_pos_ordem(g, visitados, v, tamanho, pos_ordem, p_tamanho);
 		}
     }
 
     pos_ordem[(*p_tamanho)++] = vert;
+}
+
+void acha_componentes(grafo g, vertice *visitados, vertice *vert, int *tamanho, grafo subgrafo) {
+
+    visitados[(*tamanho)++] = vert;
+	agnode(subgrafo, agnameof(vert), TRUE);
+
+    for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
+        if ((agedge(g, vert, v, NULL, FALSE)) && (!vertice_visitado(visitados, tamanho, v))) {
+          	acha_componentes(g, visitados, v, tamanho, subgrafo);
+		}
+    }
 
 }
 
@@ -317,7 +330,7 @@ int decompoe(grafo g) {
 	int pos_ordem_t = 0;
 
 	for (vertice vert = agfstnode(g); vert; vert = agnxtnode(g, vert)) {
-		dfs(g, visitados_um, vert, &visitados_tam, pos_ordem_um, &pos_ordem_t);
+		acha_pos_ordem(g, visitados_um, vert, &visitados_tam, pos_ordem_um, &pos_ordem_t);
 	}
 
 	for (int i=0; i<pos_ordem_t; ++i) {
@@ -330,20 +343,27 @@ int decompoe(grafo g) {
 	vertice visitados_dois[num_verts];
 	visitados_tam = 0;
 
-	vertice pos_ordem_dois[num_verts];
-	pos_ordem_t = 0;
-
 	int componentes_fortes = 0;
 
 	for (vertice vert = agfstnode(invertido); vert; vert = agnxtnode(invertido, vert)) {
-		if (!vertice_visitado(visitados_dois, &visitados_tam, vert))
+		if (!vertice_visitado(visitados_dois, &visitados_tam, vert)) {
+
+			grafo subgrafo = agsubg(g, NULL, TRUE);
+
 			componentes_fortes++;
-		dfs(invertido, visitados_dois, vert, &visitados_tam, pos_ordem_dois, &pos_ordem_t);
+			acha_componentes(invertido, visitados_dois, vert, &visitados_tam, subgrafo);
+		}
 	}
 
-	for (int i=0; i<pos_ordem_t; ++i) {
-		printf("%s\n", agnameof(pos_ordem_dois[i]));
-	}
+	for (grafo h = agfstsubg(g); h; h = agnxtsubg(h))
+		for (vertice v1 = agfstnode(h); v1; v1 = agnxtnode(h, v1))
+			for (vertice v2 = agfstnode(h); v2; v2 = agnxtnode(h, v2)) {
+				if (agedge(g, v1, v2, NULL, FALSE))
+					agedge(h, v1, v2, NULL, TRUE);
+			}
+	
+	for (grafo h = agfstsubg(g); h; h = agnxtsubg(h))
+		agwrite(h, stdout);
 
 	return componentes_fortes;
 }
