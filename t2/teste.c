@@ -8,7 +8,11 @@ int main(void) {
   grafo g = le_grafo();
 
   escreve_grafo(g);
-  printf("%d\n", decompoe(g));
+
+  g = decompoe(g);
+  for (grafo sg = agfstsubg(g); sg; sg = agnxtsubg(sg))
+    escreve_grafo(sg);
+
   destroi_grafo(g);
 
   return 0;

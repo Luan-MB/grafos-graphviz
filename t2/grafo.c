@@ -207,7 +207,7 @@ int n_triangulos(grafo g) {
 	int **adj_matriz_sqr = multiplica_matriz(adj_matriz, adj_matriz, n_vertices(g));
 	int **adj_matriz_cub = multiplica_matriz(adj_matriz, adj_matriz_sqr, n_vertices(g));
 	
-	return (soma_diagonal(adj_matriz_cub, n_vertices(g)) / 6);
+	return (soma_diagonal(adj_matriz_cub, n_vertices(g)) / 3);
 }
 
 static void print_matriz(int **adj_matriz, int size) {
@@ -238,6 +238,8 @@ int **matriz_adjacencia(grafo g) {
 		col = 0;
 	}
 
+	print_matriz(matriz, n_vertices(g));
+
   	return matriz;
 }
 
@@ -266,7 +268,7 @@ grafo complemento(grafo g) {
   	return complement;
 }
 
-void acha_pos_ordem(grafo g, vertice *visitados, vertice vert, int *tamanho, vertice *pos_ordem, int *p_tamanho) {
+static void acha_pos_ordem(grafo g, vertice *visitados, vertice vert, int *tamanho, vertice *pos_ordem, int *p_tamanho) {
 
 	if (vertice_visitado(visitados, tamanho, vert)) {
 		return;
@@ -283,7 +285,7 @@ void acha_pos_ordem(grafo g, vertice *visitados, vertice vert, int *tamanho, ver
     pos_ordem[(*p_tamanho)++] = vert;
 }
 
-void acha_componentes(grafo g, vertice *visitados, vertice *vert, int *tamanho, grafo subgrafo) {
+static void acha_componentes(grafo g, vertice *visitados, vertice *vert, int *tamanho, grafo subgrafo) {
 
     visitados[(*tamanho)++] = vert;
 	agnode(subgrafo, agnameof(vert), TRUE);
@@ -316,7 +318,7 @@ static grafo inverte_grafo(grafo g, vertice *pos_ordem, int n_vert) {
 }
 
 //------------------------------------------------------------------------------
-int decompoe(grafo g) {
+grafo decompoe(grafo g) {
 
 	if (!agisdirected(g))
 		return 0;
@@ -331,10 +333,6 @@ int decompoe(grafo g) {
 
 	for (vertice vert = agfstnode(g); vert; vert = agnxtnode(g, vert)) {
 		acha_pos_ordem(g, visitados_um, vert, &visitados_tam, pos_ordem_um, &pos_ordem_t);
-	}
-
-	for (int i=0; i<pos_ordem_t; ++i) {
-		printf("%s\n", agnameof(pos_ordem_um[i]));
 	}
 
 	grafo invertido = inverte_grafo(g, pos_ordem_um, num_verts);
@@ -361,10 +359,7 @@ int decompoe(grafo g) {
 				if (agedge(g, v1, v2, NULL, FALSE))
 					agedge(h, v1, v2, NULL, TRUE);
 			}
-	
-	for (grafo h = agfstsubg(g); h; h = agnxtsubg(h))
-		agwrite(h, stdout);
 
-	return componentes_fortes;
+	return g;
 }
 
