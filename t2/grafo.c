@@ -7,11 +7,6 @@
 
 #define N_COLORS 2
 
-typedef struct {
-	vertice vertice;
-	int componente;
-} t_vertice;
-
 //------------------------------------------------------------------------------
 grafo le_grafo(void) {
 
@@ -20,7 +15,7 @@ grafo le_grafo(void) {
 //------------------------------------------------------------------------------
 void destroi_grafo(grafo g) {
   
-	agfree(g, NULL);
+	agclose(g);
 }
 //------------------------------------------------------------------------------
 grafo escreve_grafo(grafo g) {
@@ -210,15 +205,6 @@ int n_triangulos(grafo g) {
 	return (soma_diagonal(adj_matriz_cub, n_vertices(g)) / 3);
 }
 
-static void print_matriz(int **adj_matriz, int size) {
-
-	for (int i=0; i<size; ++i) {
-		for (int j=0; j<size; ++j)
-			printf("%d ", adj_matriz[i][j]);
-		printf("\n");
-	}
-}
-
 // -----------------------------------------------------------------------------
 int **matriz_adjacencia(grafo g) {
 		
@@ -238,8 +224,6 @@ int **matriz_adjacencia(grafo g) {
 		col = 0;
 	}
 
-	print_matriz(matriz, n_vertices(g));
-
   	return matriz;
 }
 
@@ -247,7 +231,8 @@ int **matriz_adjacencia(grafo g) {
 grafo complemento(grafo g) {
 	
 	Agraph_t *complement;
-	complement = agopen("Complementar", Agstrictundirected, NULL);
+	char nome[] = "Complementar";
+	complement = agopen(nome, Agstrictundirected, NULL);
 
 	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n)) {
 		agnode(complement, agnameof(n), TRUE);
@@ -285,7 +270,7 @@ static void acha_pos_ordem(grafo g, vertice *visitados, vertice vert, int *taman
     pos_ordem[(*p_tamanho)++] = vert;
 }
 
-static void acha_componentes(grafo g, vertice *visitados, vertice *vert, int *tamanho, grafo subgrafo) {
+static void acha_componentes(grafo g, vertice *visitados, vertice vert, int *tamanho, grafo subgrafo) {
 
     visitados[(*tamanho)++] = vert;
 	agnode(subgrafo, agnameof(vert), TRUE);
@@ -300,7 +285,8 @@ static void acha_componentes(grafo g, vertice *visitados, vertice *vert, int *ta
 
 static grafo inverte_grafo(grafo g, vertice *pos_ordem, int n_vert) {
 
-	grafo g_reverso = agopen("g_reverso", Agdirected, NULL);
+	char nome[] = "g_reverso";
+	grafo g_reverso = agopen(nome, Agdirected, NULL);
 
 	for (int i=(n_vert-1); i>=0; --i) {
 		agnode(g_reverso, agnameof(pos_ordem[i]), TRUE);
@@ -325,20 +311,19 @@ grafo decompoe(grafo g) {
 		
 	int num_verts = n_vertices(g);
 
-    vertice visitados_um[num_verts];
+    vertice *visitados_um = malloc ((size_t) num_verts * sizeof(vertice));
 	int visitados_tam = 0;
 
-	vertice pos_ordem_um[num_verts];
+	vertice *pos_ordem = malloc ((size_t) num_verts * sizeof(vertice));
 	int pos_ordem_t = 0;
 
 	for (vertice vert = agfstnode(g); vert; vert = agnxtnode(g, vert)) {
-		acha_pos_ordem(g, visitados_um, vert, &visitados_tam, pos_ordem_um, &pos_ordem_t);
+		acha_pos_ordem(g, visitados_um, vert, &visitados_tam, pos_ordem, &pos_ordem_t);
 	}
 
-	grafo invertido = inverte_grafo(g, pos_ordem_um, num_verts);
-	escreve_grafo(invertido);
+	grafo invertido = inverte_grafo(g, pos_ordem, num_verts);
 	
-	vertice visitados_dois[num_verts];
+	vertice *visitados_dois = malloc ((size_t) num_verts * sizeof(vertice));
 	visitados_tam = 0;
 
 	int componentes_fortes = 0;
@@ -352,6 +337,11 @@ grafo decompoe(grafo g) {
 			acha_componentes(invertido, visitados_dois, vert, &visitados_tam, subgrafo);
 		}
 	}
+
+	free(visitados_um);
+	free(pos_ordem);
+	free(visitados_dois);
+	destroi_grafo(invertido);
 
 	for (grafo h = agfstsubg(g); h; h = agnxtsubg(h))
 		for (vertice v1 = agfstnode(h); v1; v1 = agnxtnode(h, v1))
