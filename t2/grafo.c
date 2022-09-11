@@ -1,3 +1,6 @@
+// Luan Machado Bernardt | GRR20190363
+// Lucas Soni Teixeira | GRR20190395
+
 #include <stdio.h>
 #include "grafo.h"
 
@@ -75,19 +78,29 @@ int grau_medio(grafo g) {
 int regular(grafo g) {
   
 	int grau_avg = grau_medio(g);
-
-	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n))
-		if (grau_avg != grau(n, g))
+	if (grau_avg % 2 != 0)
 		return 0;
-	return 1;
+
+	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n)) {
+		int grau_saida = agdegree(g, n, FALSE, TRUE);
+		int grau_entrada = agdegree(g, n, TRUE, FALSE);
+
+		if ((grau_saida != grau_avg/2) || (grau_entrada != grau_avg/2))
+			return FALSE;
+	}
+	
+	return TRUE;
 }
 
 // -----------------------------------------------------------------------------
 int completo(grafo g) {
   
-	if (grau_medio(g) == (agnnodes(g) - 1))
-		return 1;
-	return 0;
+	for (vertice v1 = agfstnode(g); v1; v1 = agnxtnode(g, v1))
+		for (vertice v2 = agfstnode(g); v2; v2 = agnxtnode(g, v2))
+			if (v1 != v2)
+				if (!agedge(g, v1, v2, NULL, FALSE))
+					return FALSE;
+	return TRUE;
 }
 
 static int vertice_visitado (vertice *visitados, int *size, vertice v) {
@@ -120,7 +133,6 @@ static void check_edges(vertice n, grafo g, vertice *visitados, int *size) {
 // -----------------------------------------------------------------------------
 int conexo(grafo g) {
 
-
 	vertice vertice_inicial = agfstnode(g);
 	vertice *visitados = (vertice *) malloc ((size_t) n_vertices(g) * sizeof(vertice));
 	int i_vis = 0;
@@ -135,7 +147,7 @@ int conexo(grafo g) {
 static int cor_valida(int **adj_matriz, int *colors, int size) {
 
 	for (int i=0; i<size; ++i)
-		for (int j=i+1; j<size; ++j)
+		for (int j=0; j<size; ++j)
 			if (adj_matriz[i][j] && (colors[j] == colors[i]))
 				return FALSE;
 	return TRUE;
@@ -231,8 +243,8 @@ int **matriz_adjacencia(grafo g) {
 grafo complemento(grafo g) {
 	
 	Agraph_t *complement;
-	char nome[] = "Complementar";
-	complement = agopen(nome, Agstrictundirected, NULL);
+	char nome[] = "g_complementar";
+	complement = agopen(nome, Agstrictdirected, NULL);
 
 	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n)) {
 		agnode(complement, agnameof(n), TRUE);
