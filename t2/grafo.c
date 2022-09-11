@@ -246,10 +246,12 @@ grafo complemento(grafo g) {
 	char nome[] = "g_complementar";
 	complement = agopen(nome, Agstrictdirected, NULL);
 
+	// Cria todos os vertices de g em g_complementar
 	for (vertice n = agfstnode(g); n; n = agnxtnode(g, n)) {
 		agnode(complement, agnameof(n), TRUE);
 	}
 
+	// Cria todos os arcos ausentes em g em g_complementar
 	for (vertice vert1 = agfstnode(g); vert1; vert1 = agnxtnode(g, vert1)) {
 		for (vertice vert2 = agfstnode(g); vert2; vert2 = agnxtnode(g, vert2)) {
 			if (vert2 != vert1) {
@@ -273,6 +275,7 @@ static void acha_pos_ordem(grafo g, vertice *visitados, vertice vert, int *taman
 
     visitados[(*tamanho)++] = vert;
 
+	// Itera sobre os arcos cujo vert é cauda
     for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
         if (agedge(g, vert, v, NULL, FALSE)) {
           	acha_pos_ordem(g, visitados, v, tamanho, pos_ordem, p_tamanho);
@@ -285,8 +288,10 @@ static void acha_pos_ordem(grafo g, vertice *visitados, vertice vert, int *taman
 static void acha_componentes(grafo g, vertice *visitados, vertice vert, int *tamanho, grafo subgrafo) {
 
     visitados[(*tamanho)++] = vert;
+	// Adiciona o vertice ao subgrafo
 	agnode(subgrafo, agnameof(vert), TRUE);
 
+	// Itera sobre os arcos cujo vert é cauda
     for (vertice v = agfstnode(g); v; v = agnxtnode(g, v)) {
         if ((agedge(g, vert, v, NULL, FALSE)) && (!vertice_visitado(visitados, tamanho, v))) {
           	acha_componentes(g, visitados, v, tamanho, subgrafo);
@@ -300,10 +305,12 @@ static grafo inverte_grafo(grafo g, vertice *pos_ordem, int n_vert) {
 	char nome[] = "g_reverso";
 	grafo g_reverso = agopen(nome, Agdirected, NULL);
 
+	// Cria os vertices no grafo na pos ordem inversa
 	for (int i=(n_vert-1); i>=0; --i) {
 		agnode(g_reverso, agnameof(pos_ordem[i]), TRUE);
 	}
 
+	// Cria os arcos em g no sentido contrario
 	for (vertice v1 = agfstnode(g); v1; v1 = agnxtnode(g, v1)) {
 		for (vertice v2 = agfstnode(g); v2; v2 = agnxtnode(g, v2)) {
 			if (agedge(g, v1, v2, NULL, FALSE)) {
@@ -329,10 +336,12 @@ grafo decompoe(grafo g) {
 	vertice *pos_ordem = malloc ((size_t) num_verts * sizeof(vertice));
 	int pos_ordem_t = 0;
 
+	// Percorre o grafo g salvando a pos ordem
 	for (vertice vert = agfstnode(g); vert; vert = agnxtnode(g, vert)) {
 		acha_pos_ordem(g, visitados_um, vert, &visitados_tam, pos_ordem, &pos_ordem_t);
 	}
 
+	// A partir da pos ordem gera um grafo g_invertido com os arcos de g em sentidos opostos
 	grafo invertido = inverte_grafo(g, pos_ordem, num_verts);
 	
 	vertice *visitados_dois = malloc ((size_t) num_verts * sizeof(vertice));
@@ -340,6 +349,7 @@ grafo decompoe(grafo g) {
 
 	int componentes_fortes = 0;
 
+	// Percorre o g_invertido a partir da pos ordem inversa criando subgrafos para cada componente forte
 	for (vertice vert = agfstnode(invertido); vert; vert = agnxtnode(invertido, vert)) {
 		if (!vertice_visitado(visitados_dois, &visitados_tam, vert)) {
 
@@ -355,6 +365,7 @@ grafo decompoe(grafo g) {
 	free(visitados_dois);
 	destroi_grafo(invertido);
 
+	// Adiciona os arcos nos subgrafos de g
 	for (grafo h = agfstsubg(g); h; h = agnxtsubg(h))
 		for (vertice v1 = agfstnode(h); v1; v1 = agnxtnode(h, v1))
 			for (vertice v2 = agfstnode(h); v2; v2 = agnxtnode(h, v2)) {
